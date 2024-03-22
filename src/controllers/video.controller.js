@@ -21,45 +21,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, videos, "Videos fetched successfully"));
 });
 
-const publishAVideo = asyncHandler(async (req, res) => {
-  const { title, description, duration = "0" } = req.body;
-  // TODO: get video, upload to cloudinary, create video
-  if ([title, description, duration].some((field) => field?.trim() === "")) {
-    throw new ApiError(400, "All field are requird");
-  }
-
-  const videoFileLocalPath = req.files?.videoFile[0]?.path;
-  let thumbnailLocalPath = req.files?.thumbnail[0]?.path;
-
-  if (!(videoFileLocalPath && thumbnailLocalPath)) {
-    throw new ApiError(400, "videoFile and thumbnail path is requird");
-  }
-  const videoFile = await uploadOnCloudinary(videoFileLocalPath);
-  const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
-
-  if (!(videoFile && thumbnail)) {
-    throw new ApiError(400, "videoFile and thumbnail is requird");
-  }
-
-  const uploadVideo = await Video.create({
-    title,
-    description,
-    videoFile: videoFile.url,
-    thumbnail: thumbnail.url,
-    duration: Number((Math.round(videoFile.duration * 100) / 100).toFixed(2)),
-    owner: req.user._id,
-  });
-  if (!uploadVideo) {
-    throw new ApiError(
-      500,
-      "Something went wrong while uploading video, try again"
-    );
-  }
-  return res
-    .status(201)
-    .json(new ApiResponse(200, uploadVideo, "Video uploaded successfully"));
-});
-
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 
@@ -120,6 +81,45 @@ const getVideoById = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(200, { video: video[0] }, "Video fetched successfully")
     );
+});
+
+const publishAVideo = asyncHandler(async (req, res) => {
+  const { title, description, duration = "0" } = req.body;
+  // TODO: get video, upload to cloudinary, create video
+  if ([title, description, duration].some((field) => field?.trim() === "")) {
+    throw new ApiError(400, "All field are requird");
+  }
+
+  const videoFileLocalPath = req.files?.videoFile[0]?.path;
+  let thumbnailLocalPath = req.files?.thumbnail[0]?.path;
+
+  if (!(videoFileLocalPath && thumbnailLocalPath)) {
+    throw new ApiError(400, "videoFile and thumbnail path is requird");
+  }
+  const videoFile = await uploadOnCloudinary(videoFileLocalPath);
+  const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+
+  if (!(videoFile && thumbnail)) {
+    throw new ApiError(400, "videoFile and thumbnail is requird");
+  }
+
+  const uploadVideo = await Video.create({
+    title,
+    description,
+    videoFile: videoFile.url,
+    thumbnail: thumbnail.url,
+    duration: Number((Math.round(videoFile.duration * 100) / 100).toFixed(2)),
+    owner: req.user._id,
+  });
+  if (!uploadVideo) {
+    throw new ApiError(
+      500,
+      "Something went wrong while uploading video, try again"
+    );
+  }
+  return res
+    .status(201)
+    .json(new ApiResponse(200, uploadVideo, "Video uploaded successfully"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {

@@ -56,10 +56,66 @@ const getUserTweets = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "tweet",
+        as: "likes",
+      },
+    },
+    {
+      $unwind: "$likes",
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "likes.likedBy",
+        foreignField: "_id",
+        as: "likes.likedBy",
+        pipeline: [
+          {
+            $project: {
+              _id: 1,
+              userName: 1,
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
       $addFields: {
-        owner: {
-          $first: "$owner",
+        "likes.likedBy": {
+          $arrayElemAt: ["$likes.likedBy", 0],
         },
+      },
+    },
+    {
+      $project: {
+        content: 1,
+        owner: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        likes: {
+          _id: "$likes.likedBy._id",
+          userName: "$likes.likedBy.userName",
+          avatar: "$likes.likedBy.avatar",
+        },
+      },
+    },
+    {
+      $group: {
+        _id: "$_id",
+        content: { $first: "$content" },
+        owner: { $first: "$owner" },
+        createdAt: { $first: "$createdAt" },
+        updatedAt: { $first: "$updatedAt" },
+        likes: { $push: "$likes" },
+      },
+    },
+    {
+      $addFields: {
+        likesCount: { $size: "$likes" },
       },
     },
     {
@@ -94,12 +150,25 @@ const getUserAllTweets = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "tweet",
+        as: "likes",
+      },
+    },
+    {
       $addFields: {
+        // object ma conver kare etale frontend ma easy re
         owner: {
           $first: "$owner",
         },
+        likes: {
+          $size: "$likes",
+        },
       },
     },
+
     {
       $sort: {
         createdAt: -1,
