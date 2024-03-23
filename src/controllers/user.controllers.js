@@ -387,7 +387,7 @@ export const getUserChannelProfile = asyncHandler(async (req, res) => {
           $cond: {
             // user chhe teni profile ma subscribe nu button show karavu ke nay em
             // jo te is sathe match karto hoy to te subscribe chhe apdi chanel ma to tene na batavo em
-            if: { $in: [req.user?._id, "$subscribers._id"] },
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
             then: true,
             else: false,
           },
@@ -402,6 +402,12 @@ export const getUserChannelProfile = asyncHandler(async (req, res) => {
         channelssubscribedToCount: 1,
         issubscribed: 1,
         avatar: 1,
+        subscribers: {
+          subscriber: 1,
+        },
+        subscribedTo: {
+          channel: 1,
+        },
         coverImage: 1,
         email: 1,
       },
